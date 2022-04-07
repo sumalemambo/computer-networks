@@ -2,18 +2,33 @@ import socket
 import threading
 
 class Server:
-    def __init__(self, header=64, format="utf-8", disconnect_msg="!DISCONECT"):
+    def __init__(self, header=64, format="utf-8", init_msg = "!INIT", 
+                    disconnect_msg="!DISCONECT"):
         # create an INET, STREAMing socket
         # socket.SOCK_STREAM specifies TCP protocol
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to a public host, and a well-known port
         self.serversocket.bind(("localhost", 5050))
         # number of bits that we will be receiving in each message after the header
+        self.connectsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.connectsocket.connect(("localhost", 5051))
         self.header = header
         # format of the msg
         self.format = format
         # server disconnect msg
         self.disconnect_msg = disconnect_msg
+    
+    def send_msg(self, sock, msg):
+        msg = msg.encode(self.format)
+        msg_length = len(msg)
+        send_lenght = str(msg_length).encode(self.format)
+        send_lenght += b' ' * (64 - len(send_lenght))
+        sock.send(send_lenght)
+        sock.send(msg)
+
+
+    def request_play(self):
+        pass
 
     def handle_client(self, conn, addr):
         print(f"[NEW CONNECTION] {addr} connected")
@@ -28,17 +43,7 @@ class Server:
                     connected = False
                 print(f"[{addr}] {msg}")
                 
-                msg = "hola"
-                message = msg.encode("utf-8")
-                msg_lenght = len(message)
-                send_lenght = str(msg_lenght).encode("utf-8")
-                send_lenght += b' ' * (64 - len(send_lenght))
-                conn.send(send_lenght)
-                conn.send(message)
-                
         conn.close()
-
-
     
     def start(self):
         print("hola")

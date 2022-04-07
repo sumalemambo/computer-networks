@@ -1,9 +1,39 @@
 import socket
-import threading
+from sqlite3 import connect
 
 class Client:
-    def __init__(self):
-        pass
+    def __init__(self, sock=None, header=64, format="utf-8", disconnect_msg="DISCONNECT"):
+        if sock is None:
+            self.clientsocket = socket.socket(
+                socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            self.clientsocket = sock
+            
+        self.header = header
+        self.format = format
+        self.disconnect_msg = disconnect_msg
+    
+    def connect(self, host, port):
+        self.clientsocket.connect((host, port))
+
+    def game(self):
+            print(
+            """
+            -------- Bienvenido al Juego --------
+            - Seleccione una opción
+            1-Jugar
+            2-Salir
+            """
+            )
+            answer = input(">>")
+            if answer == 1:
+                pass
+
+    def start(self):
+        self.connect("localhost", 5050)
+        self.game()
+
+
 
 
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
