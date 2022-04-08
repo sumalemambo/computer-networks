@@ -1,17 +1,21 @@
 import socket
-from sqlite3 import connect
 
 class Client:
-    def __init__(self, sock=None, header=64, format="utf-8", disconnect_msg="DISCONNECT"):
+    def __init__(self, sock=None, BUFFER=1024, INIT="!INIT", AVAILABLE="!AVAILABLE",
+                    NOT_AVAILABLE="!NOT_AVAILABLE", header=64,
+     format="utf-8", disconnect_msg="DISCONNECT"):
         if sock is None:
             self.clientsocket = socket.socket(
                 socket.AF_INET, socket.SOCK_STREAM)
         else:
             self.clientsocket = sock
-            
+        self.buffer = BUFFER
         self.header = header
         self.format = format
         self.disconnect_msg = disconnect_msg
+        # Message types
+        self.init_msg = INIT
+        self.available_msg = AVAILABLE
     
     def connect(self, host, port):
         self.clientsocket.connect((host, port))
@@ -25,9 +29,16 @@ class Client:
             2-Salir
             """
             )
-            answer = input(">>")
-            if answer == 1:
-                pass
+            while True: 
+                answer = input(">>")
+                if answer == 1:
+                    msg = self.init_msg.encode(self.format)
+                    self.clientsocket.send(msg)
+                    response = self.clientsocket.recv(self.buffer).decode(self.format)
+                    if response == self.available_msg:
+                        
+
+
 
     def start(self):
         self.connect("localhost", 5050)

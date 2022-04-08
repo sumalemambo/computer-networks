@@ -5,13 +5,15 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
+	"strings"
 )
 
 const(
 	PORT = ":5000"
 	BUFFER = 1024
+	INIT = "!INIT"
 	REQUEST = "!REQUEST_MOVE"
-	DISCONNECT = "!DISCONNECT"
+	AVAILABLE = "!AVAILABLE"
 	NOT_AVAILABLE = "!NOT_AVAILABLE"
 )
 
@@ -19,50 +21,58 @@ func handle_client(port string) {
 	buf := make([]byte, BUFFER)
 	s, _ := net.ResolveUDPAddr("udp", port)
 	ln, _ := net.ListenUDP("udp", s)
+
 	defer ln.Close()
 
 	n, addr, _ := ln.ReadFromUDP(buf)
-	msg := []byte(string(buf[:n]))
-	_, _ = ln.WriteToUDP(msg, addr)
-	return
+	msg := string(buf[:n])
+	slices := strings.Split(msg, ",")
+	response := []byte(slices[rand.Intn(len(slices))])
+
+	_, _ = ln.WriteToUDP(response, addr)
 }
 
 func main() {
+	// Transform local address into UDP address
 	s, err := net.ResolveUDPAddr("udp", PORT)
 	if err != nil {
 		// handle error
 		return
 	}
 
+	// Init UDP listening on UDP address
 	ln, err := net.ListenUDP("udp", s)
 	if err != nil {
 		// handle error
 		return
 	}
+	// Once the main function stops the server will close
 	defer ln.Close()
 
 	buf := make([]byte, BUFFER)
 
-	fmt.Print("[LISTENING]")
+	fmt.Printf("[LISTENING] Listening on %s\n", s)
 	for {
 		n, addr, _ := ln.ReadFromUDP(buf)
-		fmt.Println("[NEW CONNECTION] ", addr)
 		msg := string(buf[:n])
+		fmt.Printf("[NEW CONNECTION] %s connected\n", addr)
 
 		switch {
-			case msg == REQUEST:
+			case msg == INIT:
 				if rand.Float64() <= 0.8 {
-					port := ":" + strconv.Itoa(rand.Intn(65356 - 8000) + 8000)
-					go handle_client(port)
-					response := []byte(port)
+					response := []byte(AVAILABLE)
 					_, _ = ln.WriteToUDP(response, addr)
 				} else {
 					response := []byte(NOT_AVAILABLE)
 					_, _ = ln.WriteToUDP(response, addr)
 				}
-			case msg == DISCONNECT:
-				break
+			case msg == REQUEST:
+				port := strconv.Itoa(rand.Intn(65356 - 8000) + 8000)
+				go handle_client(":" + port)
+				response := []byte(port)
+				_, _ = ln.WriteToUDP(response, addr)
+			default:
+				return
 		}
 	}
-	return
 }
