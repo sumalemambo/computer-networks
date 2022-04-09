@@ -6,12 +6,16 @@ BUFFER = 1024
 INIT= "!INIT"
 AVAILABLE = "!AVAILABLE"
 NOT_AVAILABLE = "!NOT_AVAILABLE"
+REQUEST_TABLE = "!REQUEST_TABLE"
 REQUEST_STATE = "!REQUEST_STATE"
 REQUEST_MOVE = "!REQUEST_MOVE"
+DISCONNECT = "!DISCONNECT"
 FORMAT = "UTF-8"
 
 X = "X"
-O= "O"
+O = "O"
+EMPTY = None
+E = "E"
 
 
 
@@ -42,7 +46,7 @@ while True:
                 clientsocket.send(REQUEST_STATE.encode(FORMAT))
                 # Receive table
                 response = clientsocket.recv(BUFFER).decode(FORMAT)
-                if response == X or response == O:
+                if (response == X) or (response == O) or (response == E):
                     break
                 # Transform it back to list
                 table = ast.literal_eval(response)
@@ -52,12 +56,18 @@ while True:
                 clientsocket.send(play.encode(FORMAT))
             if response == X:
                 print("Has ganado!")
-            else:
+            elif response == O:
                 print("Ha ganado el bot!")
+            else:
+                print("Empate!")
+            clientsocket.send(REQUEST_TABLE.encode(FORMAT))
+            response = clientsocket.recv(BUFFER).decode(FORMAT)
+            table = ast.literal_eval(response)
+            print(table)
         else:
             print("respuesta de disponibilidad: NO DISPONIBLE")
             
     else:
         break
-
+clientsocket.send(DISCONNECT.encode(FORMAT))
 clientsocket.close()

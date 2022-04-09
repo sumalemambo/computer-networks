@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
-	"strings"
 )
 
 const(
@@ -26,9 +25,8 @@ func handle_client(port string) {
 
 	n, addr, _ := ln.ReadFromUDP(buf)
 	msg := string(buf[:n])
-	slices := strings.Split(msg, ",")
-	response := []byte(slices[rand.Intn(len(slices))])
-
+	value, _ := strconv.Atoi(msg)
+	response := []byte(strconv.Itoa(rand.Intn(value)))
 	_, _ = ln.WriteToUDP(response, addr)
 }
 
@@ -56,7 +54,8 @@ func main() {
 		n, addr, _ := ln.ReadFromUDP(buf)
 		msg := string(buf[:n])
 		fmt.Printf("[NEW CONNECTION] %s connected\n", addr)
-
+		fmt.Printf("[CLIENT MESSAGE] %s sent by %s\n", msg, addr)
+		
 		switch {
 			case msg == INIT:
 				if rand.Float64() <= 0.8 {

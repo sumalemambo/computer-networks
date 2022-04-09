@@ -1,15 +1,17 @@
 import socket
 
-
 BUFFER = 1024
 INIT= "!INIT"
 AVAILABLE = "!AVAILABLE"
 NOT_AVAILABLE = "!NOT_AVAILABLE"
 REQUEST_STATE = "!REQUEST_STATE"
 REQUEST_MOVE = "!REQUEST_MOVE"
+REQUEST_TABLE = "!REQUEST_TABLE"
+DISCONNECT = "!DISCONNECT"
 FORMAT = "UTF-8"
 X = "X"
 O = "O"
+E = "E"
 EMPTY = None
 
 def winner(board):
@@ -50,6 +52,26 @@ def winner(board):
         return board[0][len(board) - 1]
     return None
 
+def terminal(board):
+    """
+    Returns True if game is over, False otherwise.
+    """
+    if winner(board) is not None:
+        return True
+    for row in board:
+        for row_element in row:
+            if row_element is EMPTY:
+                return False
+    return True
+
+def empty_entries(board):
+    entries = []
+    for i in range(0, len(board)):
+        for j in range(0, len(board)):
+            if board[i][j] is EMPTY:
+                entries.append((i, j))
+    return entries
+
 address = "localhost"
 clientport = 5001
 serverport = 5000
@@ -65,40 +87,48 @@ playersocket, playeraddr = clientsocket.accept()
 print(f"[NEW CONNECTION] {playeraddr} connected")
 
 
-table = [[EMPTY, EMPTY, EMPTY],
-        [EMPTY, EMPTY, EMPTY],
-        [EMPTY, EMPTY, EMPTY]]
-
 while True:
     msg = playersocket.recv(BUFFER).decode(FORMAT)
     if msg:
         print(f"[CLIENT MESSAGE] {msg} sent by {playeraddr}")
         if msg == INIT:
+            table = [[EMPTY, EMPTY, EMPTY],
+                    [EMPTY, EMPTY, EMPTY],
+                    [EMPTY, EMPTY, EMPTY]]
             serversocket.sendto(msg.encode(FORMAT), (address, serverport))
             msg, addr = serversocket.recvfrom(BUFFER)
             msg = msg.decode(FORMAT)
             print(f"[SERVER MESSAGE] {msg} sent by {addr}")
             playersocket.send(msg.encode(FORMAT))
         elif msg == REQUEST_STATE:
-            win = winner(table)
-            if win is not None:
+            if terminal(table):
+                win = winner(table)
+                if win == None:
+                    win = E
                 playersocket.send(win.encode(FORMAT))
             else:
                 playersocket.send(str(table).encode(FORMAT))
                 msg = playersocket.recv(BUFFER).decode(FORMAT)
-                
-
-        elif msg == REQUEST_MOVE:
-            serversocket.sendto(msg.encode(FORMAT), (address, serverport))
-            msg, addr = serversocket.recvfrom(BUFFER)
-            msg = msg.decode(FORMAT)
-            print(f"[SERVER MESSAGE] {msg} sent by {addr}")
-            querysocket.sendto(REQUEST_MOVE.encode(FORMAT), (address, int(msg)))
-            msg, addr = querysocket.recvfrom(BUFFER)
-            msg = msg.decode(FORMAT)
-            print(f"[QUERY MESSAGE] {msg} sent by {addr}")
-            playersocket.send(msg.encode(FORMAT))
+                print(f"[CLIENT MESSAGE] {msg} sent by {playeraddr}")
+                indices = tuple(map(int, msg.strip().split(",")))
+                table[indices[0]][indices[1]] = X
+                if not terminal(table):
+                    serversocket.sendto(REQUEST_MOVE.encode(FORMAT), (address, serverport))
+                    msg, addr = serversocket.recvfrom(BUFFER)
+                    msg = msg.decode(FORMAT)
+                    print(f"[SERVER MESSAGE] {msg} sent by {addr}")
+                    empty_cells = empty_entries(table)
+                    querysocket.sendto(str(len(empty_cells)).encode(FORMAT), (address, int(msg)))
+                    msg, addr = querysocket.recvfrom(BUFFER)
+                    msg = msg.decode(FORMAT)
+                    print(f"[QUERY MESSAGE] {msg} sent by {addr}")
+                    cell = empty_cells[int(msg)]
+                    table[cell[0]][cell[1]] = O
+        elif msg == REQUEST_TABLE:
+            print(table)
+            playersocket.send(str(table).encode(FORMAT))
         else:
+            serversocket.sendto(DISCONNECT.encode(FORMAT), (address, serverport))
             break
         
 
