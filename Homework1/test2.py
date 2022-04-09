@@ -17,6 +17,17 @@ O = "O"
 EMPTY = None
 E = "E"
 
+def printTabla(tabla):
+    print("+---+---+---+---+")
+    print("|   | 0 | 1 | 2 |")
+    print("|---+---+---+---|")
+    print("| 0 |",(tabla[0][0]," ")[tabla[0][0] == None],"|",(tabla[0][1]," ")[tabla[0][1] == None],"|",(tabla[0][2]," ")[tabla[0][2] == None],"|")
+    print("|---+---+---+---|")
+    print("| 1 |",(tabla[1][0]," ")[tabla[1][0] == None],"|",(tabla[1][1]," ")[tabla[1][1] == None],"|",(tabla[1][2]," ")[tabla[1][2] == None],"|")
+    print("|---+---+---+---|")
+    print("| 2 |",(tabla[2][0]," ")[tabla[2][0] == None],"|",(tabla[2][1]," ")[tabla[2][1] == None],"|",(tabla[2][2]," ")[tabla[2][2] == None],"|")
+    print("+---+---+---+---+")
+
 
 
 address = "localhost"
@@ -50,7 +61,7 @@ while True:
                     break
                 # Transform it back to list
                 table = ast.literal_eval(response)
-                print(table)
+                printTabla(table)
                 print("Ingrese su jugada (x, y): ")
                 play = input(">>")
                 clientsocket.send(play.encode(FORMAT))
@@ -63,7 +74,7 @@ while True:
             clientsocket.send(REQUEST_TABLE.encode(FORMAT))
             response = clientsocket.recv(BUFFER).decode(FORMAT)
             table = ast.literal_eval(response)
-            print(table)
+            printTabla(table)
         else:
             print("respuesta de disponibilidad: NO DISPONIBLE")
             
