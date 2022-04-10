@@ -1,56 +1,31 @@
 import socket
+import ast
 
-class Client:
-    def __init__(self, sock=None, BUFFER=1024, INIT="!INIT", AVAILABLE="!AVAILABLE",
-                    NOT_AVAILABLE="!NOT_AVAILABLE", header=64,
-     format="utf-8", disconnect_msg="DISCONNECT"):
-        if sock is None:
-            self.clientsocket = socket.socket(
-                socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            self.clientsocket = sock
-        self.buffer = BUFFER
-        self.header = header
-        self.format = format
-        self.disconnect_msg = disconnect_msg
-        # Message types
-        self.init_msg = INIT
-        self.available_msg = AVAILABLE
-    
-    def connect(self, host, port):
-        self.clientsocket.connect((host, port))
+# Define the different messages between client and server
+BUFFER = 1024
+INIT= "!INIT"
+AVAILABLE = "!AVAILABLE"
+NOT_AVAILABLE = "!NOT_AVAILABLE"
+REQUEST_TABLE = "!REQUEST_TABLE"
+REQUEST_STATE = "!REQUEST_STATE"
+REQUEST_MOVE = "!REQUEST_MOVE"
+DISCONNECT = "!DISCONNECT"
+FORMAT = "UTF-8"
 
-    def game(self):
-            print(
-            """
-            -------- Bienvenido al Juego --------
-            - Seleccione una opción
-            1-Jugar
-            2-Salir
-            """
-            )
-            while True: 
-                answer = input(">>")
-                if answer == 1:
-                    msg = self.init_msg.encode(self.format)
-                    self.clientsocket.send(msg)
-                    response = self.clientsocket.recv(self.buffer).decode(self.format)
-                    if response == self.available_msg:
-                        
+X = "X"
+O = "O"
+EMPTY = None
+E = "E"
 
 
-
-    def start(self):
-        self.connect("localhost", 5050)
-        self.game()
-
-
-
+# Define the connection variables
+address = "localhost"
+serverport = 5001
 
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-clientsocket.connect(("localhost", 5050))
+clientsocket.connect((address, serverport))
 
-
+# Start client
 while True:
     print(
     """
@@ -61,20 +36,39 @@ while True:
     """
     )
     answer = input(">>")
-    if answer == 2:
+    if answer == "1":
+        clientsocket.send(INIT.encode(FORMAT))
+        response = clientsocket.recv(BUFFER).decode(FORMAT)
+        if response == AVAILABLE:
+            print("respuesta de disponibilidad: OK")
+            while True:
+                # Repeat while no winner
+                # Ask server to send the current table
+                clientsocket.send(REQUEST_STATE.encode(FORMAT))
+                # Receive table
+                response = clientsocket.recv(BUFFER).decode(FORMAT)
+                # Check if theres is a winner
+                if (response == X) or (response == O) or (response == E):
+                    break
+                # Transform it back to list
+                table = ast.literal_eval(response)
+                print(table)
+                print("Ingrese su jugada (x, y): ")
+                play = input(">>")
+                clientsocket.send(play.encode(FORMAT))
+            if response == X:
+                print("Has ganado!")
+            elif response == O:
+                print("Ha ganado el bot!")
+            else:
+                print("Empate!")
+            clientsocket.send(REQUEST_TABLE.encode(FORMAT))
+            response = clientsocket.recv(BUFFER).decode(FORMAT)
+            table = ast.literal_eval(response)
+            print(table)
+        else:
+            print("respuesta de disponibilidad: NO DISPONIBLE")
+    else:
         break
-    
-    msg = input()
-    message = msg.encode("utf-8")
-    msg_lenght = len(message)
-    send_lenght = str(msg_lenght).encode("utf-8")
-    send_lenght += b' ' * (64 - len(send_lenght))
-    clientsocket.send(send_lenght)
-    clientsocket.send(message)
-
-    msg_length = clientsocket.recv(64).decode("utf-8")
-    if msg_length:
-        msg_length = int(msg_length)
-        msg = clientsocket.recv(msg_length).decode("utf-8")
-        print(f"{msg}")
-
+clientsocket.send(DISCONNECT.encode(FORMAT))
+clientsocket.close()

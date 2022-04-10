@@ -24,7 +24,10 @@ func handle_client(port string) {
 	defer ln.Close()
 
 	n, addr, _ := ln.ReadFromUDP(buf)
+
+	fmt.Printf("[NEW CONNECTION] %s connected\n", addr)
 	msg := string(buf[:n])
+	fmt.Printf("[CLIENT MESSAGE] %s sent by %s\n", msg, addr)
 	value, _ := strconv.Atoi(msg)
 	response := []byte(strconv.Itoa(rand.Intn(value)))
 	_, _ = ln.WriteToUDP(response, addr)
