@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Define message types between server and gato_server
 const(
 	PORT = ":5000"
 	BUFFER = 1024
@@ -16,6 +17,8 @@ const(
 	NOT_AVAILABLE = "!NOT_AVAILABLE"
 )
 
+
+// Function to listen UDP messages on random ports and send random plays back
 func handle_client(port string) {
 	buf := make([]byte, BUFFER)
 	s, _ := net.ResolveUDPAddr("udp", port)
@@ -29,7 +32,9 @@ func handle_client(port string) {
 	msg := string(buf[:n])
 	fmt.Printf("[CLIENT MESSAGE] %s sent by %s\n", msg, addr)
 	value, _ := strconv.Atoi(msg)
+	// Select one of the n possible random moves
 	response := []byte(strconv.Itoa(rand.Intn(value)))
+	// Send the move back to the server
 	_, _ = ln.WriteToUDP(response, addr)
 }
 
@@ -59,6 +64,7 @@ func main() {
 		fmt.Printf("[NEW CONNECTION] %s connected\n", addr)
 		fmt.Printf("[CLIENT MESSAGE] %s sent by %s\n", msg, addr)
 		
+		// Handle the different messsages
 		switch {
 			case msg == INIT:
 				if rand.Float64() <= 0.8 {

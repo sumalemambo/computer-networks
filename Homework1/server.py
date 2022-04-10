@@ -1,5 +1,6 @@
 import socket
 
+
 BUFFER = 1024
 INIT= "!INIT"
 AVAILABLE = "!AVAILABLE"
@@ -13,6 +14,7 @@ X = "X"
 O = "O"
 E = "E"
 EMPTY = None
+
 
 def winner(board):
     """
@@ -52,6 +54,7 @@ def winner(board):
         return board[0][len(board) - 1]
     return None
 
+
 def terminal(board):
     """
     Returns True if game is over, False otherwise.
@@ -64,6 +67,8 @@ def terminal(board):
                 return False
     return True
 
+
+# Function to find the (i, j) positions that are empty in the table
 def empty_entries(board):
     entries = []
     for i in range(0, len(board)):
@@ -72,6 +77,8 @@ def empty_entries(board):
                 entries.append((i, j))
     return entries
 
+
+# Connection variables
 address = "localhost"
 clientport = 5001
 serverport = 5000
@@ -91,11 +98,15 @@ while True:
     msg = playersocket.recv(BUFFER).decode(FORMAT)
     if msg:
         # If msg is not empty
+
         print(f"[CLIENT MESSAGE] {msg} sent by {playeraddr}")
+
+        # Handle the different message types
         if msg == INIT:
             table = [[EMPTY, EMPTY, EMPTY],
                     [EMPTY, EMPTY, EMPTY],
                     [EMPTY, EMPTY, EMPTY]]
+
             serversocket.sendto(msg.encode(FORMAT), (address, serverport))
             msg, addr = serversocket.recvfrom(BUFFER)
             msg = msg.decode(FORMAT)
@@ -113,6 +124,7 @@ while True:
                 # If the game is not in terminal state send the table back to the client
                 playersocket.send(str(table).encode(FORMAT))
                 msg = playersocket.recv(BUFFER).decode(FORMAT)
+
                 # Apply the client move to the table
                 print(f"[CLIENT MESSAGE] {msg} sent by {playeraddr}")
                 indices = tuple(map(int, msg.strip().split(",")))
@@ -120,15 +132,25 @@ while True:
 
                 # If the game is not in terminal state ask the gato_server for a play
                 if not terminal(table):
+                    # Request move to the gato_server
                     serversocket.sendto(REQUEST_MOVE.encode(FORMAT), (address, serverport))
+                    # Msg contains the port on which the gato_server will open a UDP connection to
+                    # send the move
                     msg, addr = serversocket.recvfrom(BUFFER)
                     msg = msg.decode(FORMAT)
                     print(f"[SERVER MESSAGE] {msg} sent by {addr}")
+                    # empty_cells will contain the (i, j) positions in the table that are empty
                     empty_cells = empty_entries(table)
+                    # Send the length of the array containing the empty entries of the table to
+                    # the query port of the gato_server
                     querysocket.sendto(str(len(empty_cells)).encode(FORMAT), (address, int(msg)))
+                    # The gato_server will return an index asociated with a (i, j) position in the
+                    # empty_cells array
                     msg, addr = querysocket.recvfrom(BUFFER)
                     msg = msg.decode(FORMAT)
+                    # QUERY MESSAGE identifies the messages sent by the randomly open port in the gato_server
                     print(f"[QUERY MESSAGE] {msg} sent by {addr}")
+                    # Apply the play empty_cells[msg] on the table where msg is the index sent by gato_server
                     cell = empty_cells[int(msg)]
                     table[cell[0]][cell[1]] = O
         elif msg == REQUEST_TABLE:

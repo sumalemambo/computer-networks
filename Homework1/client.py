@@ -25,6 +25,19 @@ serverport = 5001
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientsocket.connect((address, serverport))
 
+# Function to print the table
+def printTabla(tabla):
+    print("+---+---+---+---+")
+    print("|   | 0 | 1 | 2 |")
+    print("|---+---+---+---|")
+    print("| 0 |",(tabla[0][0]," ")[tabla[0][0] == None],"|",(tabla[0][1]," ")[tabla[0][1] == None],"|",(tabla[0][2]," ")[tabla[0][2] == None],"|")
+    print("|---+---+---+---|")
+    print("| 1 |",(tabla[1][0]," ")[tabla[1][0] == None],"|",(tabla[1][1]," ")[tabla[1][1] == None],"|",(tabla[1][2]," ")[tabla[1][2] == None],"|")
+    print("|---+---+---+---|")
+    print("| 2 |",(tabla[2][0]," ")[tabla[2][0] == None],"|",(tabla[2][1]," ")[tabla[2][1] == None],"|",(tabla[2][2]," ")[tabla[2][2] == None],"|")
+    print("+---+---+---+---+")
+
+
 # Start client
 while True:
     print(
@@ -50,12 +63,13 @@ while True:
                 # Check if theres is a winner
                 if (response == X) or (response == O) or (response == E):
                     break
-                # Transform it back to list
+                # If there is no winner transform it back to list and send a play to server
                 table = ast.literal_eval(response)
                 print(table)
                 print("Ingrese su jugada (x, y): ")
                 play = input(">>")
                 clientsocket.send(play.encode(FORMAT))
+            # Check if there is a winner
             if response == X:
                 print("Has ganado!")
             elif response == O:
