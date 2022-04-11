@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
+	"strings"
 )
 
 // Define message types between server and gato_server
@@ -31,9 +32,9 @@ func handle_client(port string) {
 	fmt.Printf("[NEW CONNECTION] %s connected\n", addr)
 	msg := string(buf[:n])
 	fmt.Printf("[CLIENT MESSAGE] %s sent by %s\n", msg, addr)
-	value, _ := strconv.Atoi(msg)
+	empty_cells := strings.Split(msg, ", ")
 	// Select one of the n possible random moves
-	response := []byte(strconv.Itoa(rand.Intn(value)))
+	response := []byte(empty_cells[rand.Intn(len(empty_cells))])
 	// Send the move back to the server
 	_, _ = ln.WriteToUDP(response, addr)
 }

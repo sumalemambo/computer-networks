@@ -70,12 +70,12 @@ def terminal(board):
 
 # Function to find the (i, j) positions that are empty in the table
 def empty_entries(board):
-    entries = []
+    entries = ""
     for i in range(0, len(board)):
         for j in range(0, len(board)):
             if board[i][j] is EMPTY:
-                entries.append((i, j))
-    return entries
+                entries = entries + "(" + str(i) + "," + str(j) + "), "
+    return (entries[:len(entries) - 2])
 
 
 # Connection variables
@@ -143,7 +143,7 @@ while True:
                     empty_cells = empty_entries(table)
                     # Send the length of the array containing the empty entries of the table to
                     # the query port of the gato_server
-                    querysocket.sendto(str(len(empty_cells)).encode(FORMAT), (address, int(msg)))
+                    querysocket.sendto(empty_cells.encode(FORMAT), (address, int(msg)))
                     # The gato_server will return an index asociated with a (i, j) position in the
                     # empty_cells array
                     msg, addr = querysocket.recvfrom(BUFFER)
@@ -151,8 +151,8 @@ while True:
                     # QUERY MESSAGE identifies the messages sent by the randomly open port in the gato_server
                     print(f"[QUERY MESSAGE] {msg} sent by {addr}")
                     # Apply the play empty_cells[msg] on the table where msg is the index sent by gato_server
-                    cell = empty_cells[int(msg)]
-                    table[cell[0]][cell[1]] = O
+                    cell = (msg[1], msg[3])
+                    table[int(cell[0])][int(cell[1])] = O
         elif msg == REQUEST_TABLE:
             playersocket.send(str(table).encode(FORMAT))
         else:
