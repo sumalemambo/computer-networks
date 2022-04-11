@@ -32,8 +32,9 @@ func handle_client(port string) {
 	fmt.Printf("[NEW CONNECTION] %s connected\n", addr)
 	msg := string(buf[:n])
 	fmt.Printf("[CLIENT MESSAGE] %s sent by %s\n", msg, addr)
+	// msg contains the empty cells in the table
 	empty_cells := strings.Split(msg, ", ")
-	// Select one of the n possible random moves
+	// Select one of the n possible empty cells and return the play
 	response := []byte(empty_cells[rand.Intn(len(empty_cells))])
 	// Send the move back to the server
 	_, _ = ln.WriteToUDP(response, addr)
