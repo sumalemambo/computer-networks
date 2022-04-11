@@ -75,7 +75,8 @@ func main() {
 					_, _ = ln.WriteToUDP(response, addr)
 				}
 			case msg == REQUEST:
-				port := strconv.Itoa(rand.Intn(65535 - 8000) + 8000)
+				// rand.Intn(65535 - 8000) = rand.Intn(57535)
+				port := strconv.Itoa(rand.Intn(57535) + 8000)
 				go handle_client(":" + port)
 				response := []byte(port)
 				_, _ = ln.WriteToUDP(response, addr)
