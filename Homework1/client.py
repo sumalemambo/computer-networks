@@ -26,7 +26,7 @@ clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientsocket.connect((address, serverport))
 
 # Function to print the table
-def printTabla(tabla):
+def printTable(tabla):
     print("+---+---+---+---+")
     print("|   | 0 | 1 | 2 |")
     print("|---+---+---+---|")
@@ -65,7 +65,7 @@ while True:
                     break
                 # If there is no winner transform it back to list and send a play to server
                 table = ast.literal_eval(response)
-                print(table)
+                printTable(table)
                 print("Ingrese su jugada (x, y): ")
                 play = input(">>")
                 clientsocket.send(play.encode(FORMAT))
@@ -79,7 +79,7 @@ while True:
             clientsocket.send(REQUEST_TABLE.encode(FORMAT))
             response = clientsocket.recv(BUFFER).decode(FORMAT)
             table = ast.literal_eval(response)
-            print(table)
+            printTable(table)
         else:
             print("respuesta de disponibilidad: NO DISPONIBLE")
     else:
