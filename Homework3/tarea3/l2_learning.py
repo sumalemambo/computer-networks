@@ -127,6 +127,9 @@ class LearningSwitch (object):
       Drops this packet and optionally installs a flow to continue
       dropping similar ones for a while
       """
+
+      log.debug("DROPEANDO PACKET")
+
       if duration is not None:
         if not isinstance(duration, tuple):
           duration = (duration,duration)
@@ -143,6 +146,8 @@ class LearningSwitch (object):
         self.connection.send(msg)
 
     self.macToPort[packet.src] = event.port # 1
+    if self.connection.dpid == 3:
+      log.debug(self.macToPort)
 
     if not self.transparent: # 2
       if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
@@ -165,7 +170,9 @@ class LearningSwitch (object):
         # 6
         log.debug("installing flow for %s.%i -> %s.%i" %
                   (packet.src, event.port, packet.dst, port))
-        
+
+        log.debug(f"S{self.connection.dpid}: Incoming packet on port from {packet.src} to {packet.dst}")
+
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet, event.port)
         msg.idle_timeout = 10

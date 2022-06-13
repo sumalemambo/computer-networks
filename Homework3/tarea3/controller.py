@@ -31,19 +31,19 @@ class Controller(object):
     """
     def s1_setup(self):
         # Switch 1 rules
-        self.allowed_ports = [2, 4, 5]
+        self.allowed_ports = {2, 4, 5}
     
     def s2_setup(self):
         # Switch 2 rules
-        self.allowed_ports = [8, 10, 11]
+        self.allowed_ports = {8, 10, 11}
 
     def s3_setup(self):
         # Switch 3 rules
-        self.allowed_ports = [14, 16, 17]
+        self.allowed_ports = {14, 16, 17}
 
     def s4_setup(self):
         # Switch 4 rules
-        self.allowed_ports = [19]
+        self.allowed_ports = {19}
     
     def resend_packet (self, packet_in, out_port):
         """
@@ -66,44 +66,35 @@ class Controller(object):
         """
         Implement switch-like behavior.
         """
-        if self.connection.dpid == 3:
-            log.info(f"INCOMING PACKET FROM {packet.src} TO {packet.dst} PORT {packet_in.in_port}")
-        if packet_in.in_port not in self.allowed_ports:
-            return
+        #log.debug(f"S{self.connection.dpid}: Incoming packet on port {packet_in.in_port} from {packet.src} to {packet.dst}")
 
-        self.macToPort[packet.src] = packet_in.in_port
+        """
+        Learn the port for the source MAC. The controller will now know that packets
+        coming from packet.src are arriving via port packet_in.in_port therefore
+        if a new packet arrives with new_packet.dst = packet.src  the packet should
+        be forwarded to packet_in.in_port if its allowed.
+        """
+
+        if packet.src not in self.macToPort:
+            self.macToPort[packet.src] = packet_in.in_port
+            if self.connection.dpid == 3:
+                log.debug(self.macToPort)
 
         # Learn the port for the source MAC
         if packet.dst in self.macToPort:
-            self.macToPort[packet.src] = packet_in.in_port
-
-            #if the port associated with the destination MAC of the packet is known:
-            # Send packet out the associated port
-            #self.resend_packet(packet_in, ...)
-
-            # Once you have the above working, try pushing a flow entry
-            # instead of resending the packet (comment out the above and
-            # uncomment and complete the below.)
 
             log.debug("Installing flow...")
-            # Maybe the log statement should have source/destination/port?
 
             msg = of.ofp_flow_mod()
-            #
-            ## Set fields to match received packet
+            
             msg.match = of.ofp_match.from_packet(packet, packet_in.in_port)
             msg.idle_timeout = 10
             msg.hard_timeout = 30
             msg.actions.append(of.ofp_action_output(port = self.macToPort[packet.dst]))
             msg.data = packet_in # 6a
             self.connection.send(msg)
-            #
-            #< Set other fields of flow_mod (timeouts? buffer_id?) >
-            #
-            #< Add an output action, and send -- similar to resend_packet() >
         else:
-            # Flood the packet out everything but the input port
-            self.resend_packet(packet_in, self.allowed_ports)
+            self.resend_packet(packet_in, self.allowed_ports - {packet_in.in_port})
         
     def _handle_PacketIn (self, event):
         """
@@ -116,10 +107,6 @@ class Controller(object):
             return
 
         packet_in = event.ofp # The actual ofp_packet_in message.
-
-        # Comment out the following line and uncomment the one after
-        # when starting the exercise.
-        #self.act_like_hub(packet, packet_in)
         self.act_like_switch(packet, packet_in)
 
 def launch ():
