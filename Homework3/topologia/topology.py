@@ -10,6 +10,7 @@ class TwoWayTopology(Topo):
         s2 = self.addSwitch('s2', dpid = '2')
         s3 = self.addSwitch('s3', dpid = '3')
         s4 = self.addSwitch('s4', dpid = '4')
+        s5 = self.addSwitch('s5', dpid = '5')
         # Hosts
         h1 = self.addHost('h1', mac = '00:00:00:00:00:01')
         h2 = self.addHost('h2', mac = '00:00:00:00:00:02')
@@ -17,6 +18,8 @@ class TwoWayTopology(Topo):
         h4 = self.addHost('h4', mac = '00:00:00:00:00:04')
         h5 = self.addHost('h5', mac = '00:00:00:00:00:05')
         h6 = self.addHost('h6', mac = '00:00:00:00:00:06')
+        h7 = self.addHost('h7', mac = '00:00:00:00:00:07')
+        h8 = self.addHost('h8', mac = '00:00:00:00:00:08')
         # Links
         # Switch 1
         self.addLink(h1, s1, 1, 2)
@@ -30,7 +33,12 @@ class TwoWayTopology(Topo):
         self.addLink(h5, s3, 13, 14)
         self.addLink(h6, s3, 15, 16)
         self.addLink(s3, s4, 17, 18)
-        #Switch 4
+        # Switch 4
         self.addLink(s4, s1, 19, 20)
+        self.addLink(s4, s5, 21, 22)
+        # Switch 5
+        self.addLink(h7, s5, 23, 24)
+        self.addLink(h8, s5, 25, 26)
+        self.addLink(s5, s1, 27, 28)
 
 topos = {'MyTopo': (lambda: TwoWayTopology())}

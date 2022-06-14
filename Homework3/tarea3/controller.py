@@ -24,6 +24,8 @@ class Controller(object):
             self.s3_setup()
         elif connection.dpid == 4:
             self.s4_setup()
+        else:
+            self.s5_setup()
 
     """
     This setup rules will define to which port can each switch output
@@ -43,7 +45,10 @@ class Controller(object):
 
     def s4_setup(self):
         # Switch 4 rules
-        self.allowed_ports = {19}
+        self.allowed_ports = {19, 21}
+
+    def s5_setup(self):
+        self.allowed_ports = {24, 26, 27}
     
     def resend_packet (self, packet_in, out_port):
         """
@@ -75,10 +80,23 @@ class Controller(object):
         be forwarded to packet_in.in_port if its allowed.
         """
 
-        if (packet.src not in self.macToPort) and (packet_in.in_port in self.allowed_ports):
+        if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
+            return
+
+        if packet.dst in self.macToPort:
+            if self.macToPort[packet.dst] == packet_in.in_port:
+                return
+        
+        if packet.src in self.macToPort:
+            if self.macToPort[packet.src] != packet_in.in_port:
+                return
+
+        if self.connection.dpid == 3:
+            log.debug(f"SRC: {packet.src} DST: {packet.dst}")
+            log.debug(self.macToPort)
+
+        if packet_in.in_port in self.allowed_ports:
             self.macToPort[packet.src] = packet_in.in_port
-            if self.connection.dpid == 3:
-                log.debug(self.macToPort)
 
         # Learn the port for the source MAC
         if packet.dst in self.macToPort:
