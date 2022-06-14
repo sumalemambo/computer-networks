@@ -75,7 +75,7 @@ class Controller(object):
         be forwarded to packet_in.in_port if its allowed.
         """
 
-        if packet.src not in self.macToPort:
+        if (packet.src not in self.macToPort) and (packet_in.in_port in self.allowed_ports):
             self.macToPort[packet.src] = packet_in.in_port
             if self.connection.dpid == 3:
                 log.debug(self.macToPort)
