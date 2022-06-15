@@ -2,6 +2,13 @@
 
 from mininet.topo import Topo
 
+"""
+This class defines the topology for the second network.
+A two-way topology with unidirectional links. Mininet links
+are implemented as bidirectional so we will implement the logic
+the make them unidirectional in the controller.
+"""
+
 class TwoWayTopology(Topo):
     def __init__(self):
         Topo.__init__(self)

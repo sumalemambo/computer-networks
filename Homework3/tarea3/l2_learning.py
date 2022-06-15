@@ -128,8 +128,6 @@ class LearningSwitch (object):
       dropping similar ones for a while
       """
 
-      log.debug("DROPEANDO PACKET")
-
       if duration is not None:
         if not isinstance(duration, tuple):
           duration = (duration,duration)
