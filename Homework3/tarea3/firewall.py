@@ -1,37 +1,57 @@
+"""
+Block TCP ports
+
+Save as ext/blocker.py and run along with l2_learning.
+
+You can specify ports to block on the commandline:
+./pox.py forwarding.l2_learning blocker --ports=80,8888,8000
+
+Alternatively, if you run with the "py" component, you can use the CLI:
+./pox.py forwarding.l2_learning blocker py
+ ...
+POX> block(80, 8888, 8000)
+"""
+
 from pox.core import core
-import pox.openflow.libopenflow_01 as of
-from pox.lib.revent import *
 from pox.lib.addresses import EthAddr
+import pox.lib.packet
 
-rules = [['00:00:00:00:00:01','00:00:00:00:00:02'],
-         ['00:00:00:00:00:01','00:00:00:00:00:03'],
-         ['00:00:00:00:00:01','00:00:00:00:00:04'],
-         ['00:00:00:00:00:01','00:00:00:00:00:05'],
-         ['00:00:00:00:00:01','00:00:00:00:00:06'],
-         ['00:00:00:00:00:02','00:00:00:00:00:03'],
-         ['00:00:00:00:00:02','00:00:00:00:00:04'],
-         ['00:00:00:00:00:02','00:00:00:00:00:05'],
-         ['00:00:00:00:00:02','00:00:00:00:00:06'],
-         ['00:00:00:00:00:03','00:00:00:00:00:04'],
-         ['00:00:00:00:00:03','00:00:00:00:00:05'],
-         ['00:00:00:00:00:03','00:00:00:00:00:06'],
-         ['00:00:00:00:00:04','00:00:00:00:00:05'],
-         ['00:00:00:00:00:04','00:00:00:00:00:06'],
-         ['00:00:00:00:00:05','00:00:00:00:00:06']]
+# A set of ports to block
+block_ports = set()
 
-class SDNFirewall (EventMixin):
-    
-    def __init__ (self):
-        self.listenTo(core.openflow)
-        
-    def _handle_ConnectionUp (self, event):
-        for rule in rules:
-            block = of.ofp_match()
-            block.dl_src = EthAddr(rule[0])
-            block.dl_dst = EthAddr(rule[1])
-            flow_mod = of.ofp_flow_mod()
-            flow_mod.match = block
-            event.connection.send(flow_mod)
-        
-def launch ():
-    core.registerNew(SDNFirewall)
+def block_handler (event):
+    # Handles packet events and kills the ones with a blocked port number
+
+    packet = event.parsed
+    tcpp = packet.find('tcp')
+    if not tcpp:
+        # Not TCP
+        if packet.find('arp'):
+            return
+        event.halt = True
+    if tcpp is None:
+        return
+    if tcpp.dstport not in block_ports and packet.src != EthAddr('00:00:00:00:00:07'):
+        # Halt the event, stopping l2_learning from seeing it
+        # (and installing a table entry for it)
+        core.getLogger("blocker").debug("BLoqueando2")
+        event.halt = True
+
+def unblock (*ports):
+  block_ports.difference_update(ports)
+
+def block (*ports):
+  block_ports.update(ports)
+
+def launch (ports = ''):
+
+  # Add ports from commandline to list of ports to block
+  block_ports.update(int(x) for x in ports.replace(",", " ").split())
+
+  # Add functions to Interactive so when you run POX with py, you
+  # can easily add/remove ports to block.
+  core.Interactive.variables['block'] = block
+  core.Interactive.variables['unblock'] = unblock
+
+  # Listen to packet events
+  core.openflow.addListenerByName("PacketIn", block_handler)
