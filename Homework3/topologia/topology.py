@@ -48,4 +48,8 @@ class TwoWayTopology(Topo):
         self.addLink(h8, s5, 25, 26)
         self.addLink(s5, s1, 27, 28)
 
+        #starting HTTP server 
+        #h7.cmd('python -m http.Server 80')
+        #h8.cmd('python -m http.Server 8888')
+
 topos = {'MyTopo': (lambda: TwoWayTopology())}
