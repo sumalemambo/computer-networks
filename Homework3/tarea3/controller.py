@@ -17,7 +17,6 @@ class Controller(object):
         self.transparent = transparent
 
         self.hold_down_expired = _flood_delay == 0
-        
 
         # Routing table
         self.macToPort = {}
@@ -42,14 +41,44 @@ class Controller(object):
     def s1_setup(self):
         # Switch 1 rules
         self.allowed_ports = {2, 4, 5}
+        self.black_list[EthAddr('00:00:00:00:00:01')] = [
+            EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:03'),
+             EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:05'), 
+             EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:08')
+        ]
+        self.black_list[EthAddr('00:00:00:00:00:02')] = [
+            EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:03'),
+             EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:05'), 
+             EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:08')
+        ]
     
     def s2_setup(self):
         # Switch 2 rules
         self.allowed_ports = {8, 10, 11}
+        self.black_list[EthAddr('00:00:00:00:00:03')] = [
+            EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'),
+             EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:05'), 
+             EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:07')
+        ]
+        self.black_list[EthAddr('00:00:00:00:00:04')] = [
+            EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'),
+             EthAddr('00:00:00:00:00:03'), EthAddr('00:00:00:00:00:05'), 
+             EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:07')
+        ]
 
     def s3_setup(self):
         # Switch 3 rules
         self.allowed_ports = {14, 16, 17}
+        self.black_list[EthAddr('00:00:00:00:00:05')] = [
+            EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'),
+             EthAddr('00:00:00:00:00:03'), EthAddr('00:00:00:00:00:04'), 
+             EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:07')
+        ]
+        self.black_list[EthAddr('00:00:00:00:00:06')] = [
+            EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'),
+             EthAddr('00:00:00:00:00:03'), EthAddr('00:00:00:00:00:04'), 
+             EthAddr('00:00:00:00:00:05'), EthAddr('00:00:00:00:00:07')
+        ]
 
     def s4_setup(self):
         # Switch 4 rules
@@ -147,7 +176,8 @@ class Controller(object):
                 drop(10)
                 return
         
-        # Check if packet src is in blacklist.
+        # Check if packet src is in blacklist. This will prevent host to
+        # host communication.
         if packet.dst in self.black_list:
             if packet.src in self.black_list[packet.dst]:
                 # Address is blacklisted, drop packet.

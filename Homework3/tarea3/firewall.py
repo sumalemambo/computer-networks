@@ -1,52 +1,61 @@
 """
-Block TCP ports
+This firewall works in the following way:
 
-Save as ext/blocker.py and run along with l2_learning.
+  - All non TCP packets will be blocked with
+   the exception of ARP packets, this will be used
+   for MAC discovery on the link layer.
 
-You can specify ports to block on the commandline:
-./pox.py forwarding.l2_learning blocker --ports=80,8888,8000
-
-Alternatively, if you run with the "py" component, you can use the CLI:
-./pox.py forwarding.l2_learning blocker py
- ...
-POX> block(80, 8888, 8000)
+  - Since the HTTP servers will run on port 80, all
+    packets coming from client hosts whose TCP 
+    destination port is not 80 will be blocked.
+  
+  - On the client side the hosts will open a random
+    TCP port to send HTTP messages to the server so
+    we should not block packets whose source address
+    is a HTTP server and have a TCP destination port
+    different from 80. 
 """
 
 from pox.core import core
-from pox.lib.addresses import EthAddr
-import pox.lib.packet
+from pox.lib.addresses import *
+import pox.lib.packet as pkt
 
-# A set of ports to block
-block_ports = set()
+# A set of ports to keep unblocked.
+unblocked_ports = set()
+
+# A set of server addresses to keep unblocked.
+unblocked_addreses = {EthAddr('00:00:00:00:00:07'), EthAddr('00:00:00:00:00:08')}
 
 def block_handler (event):
-    # Handles packet events and kills the ones with a blocked port number
-
-    packet = event.parsed
-    tcpp = packet.find('tcp')
-    if not tcpp:
-        # Not TCP
-        if packet.find('arp'):
-            return
-        event.halt = True
-    if tcpp is None:
-        return
-    if tcpp.dstport not in block_ports and packet.src != EthAddr('00:00:00:00:00:07'):
-        # Halt the event, stopping l2_learning from seeing it
-        # (and installing a table entry for it)
-        core.getLogger("blocker").debug("BLoqueando2")
-        event.halt = True
-
-def unblock (*ports):
-  block_ports.difference_update(ports)
+  # Handles packet events and kills the ones with a blocked port number.
+  
+  packet = event.parsed
+  tcpp = packet.find('tcp')
+  if not tcpp:
+    
+      # Not TCP, check if ARP otherwise block.
+      if packet.find('arp'):
+          return
+      core.getLogger("blocker").debug(f"BLOQUEADO {packet.src}")    
+      event.halt = True
+  if tcpp is None:
+      return
+  if tcpp.dstport not in unblocked_ports and packet.src not in unblocked_addreses:
+      # Halt the event, stopping l2_learning from seeing it
+      # (and installing a table entry for it)
+      core.getLogger("blocker").debug(f"BLOQUEADO {tcpp.dstport}")
+      event.halt = True
 
 def block (*ports):
-  block_ports.update(ports)
+  unblocked_ports.difference_update(ports)
+
+def unblock (*ports):
+  unblocked_ports.update(ports)
 
 def launch (ports = ''):
 
   # Add ports from commandline to list of ports to block
-  block_ports.update(int(x) for x in ports.replace(",", " ").split())
+  unblocked_ports.update(int(x) for x in ports.replace(",", " ").split())
 
   # Add functions to Interactive so when you run POX with py, you
   # can easily add/remove ports to block.

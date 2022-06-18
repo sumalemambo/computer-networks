@@ -21,7 +21,10 @@ docker run -it --rm --privileged -e DISPLAY \
 #pox
 #en la consola usada en el paso anterior ejecuten este comando cuando tengan o quiran probar sus controladores
 
-python3 pox.py log.level --DEBUG misc.full_payload tarea3.l2_learning openflow.discovery openflow.spanning_tree --no-flood --hold-down
+
+
+python3 pox.py log.level --DEBUG misc.full_payload tarea3.controller tarea3.firewall --ports=80 openflow.discovery openflow.spanning_tree --no-flood --hold-down
+# python3 pox.py log.level --DEBUG misc.full_payload tarea3.l2_learning openflow.discovery openflow.spanning_tree --no-flood --hold-down
 
 #mininet
 #en una consola a parte ejecuten los siguientes comandos para la parte de mininet
