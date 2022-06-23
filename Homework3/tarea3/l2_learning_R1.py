@@ -90,6 +90,14 @@ class LearningSwitch (object):
 
     #log.debug("Initializing LearningSwitch, transparent=%s",
     #          str(self.transparent))
+  
+  def _handle_PortStatus (self, event):
+    if not event.added:
+      for key in self.macToPort:
+        if self.macToPort[key] == event.port:
+          del self.macToPort[key]
+          return
+
 
   def _handle_PacketIn (self, event):
     """
@@ -143,11 +151,10 @@ class LearningSwitch (object):
         self.connection.send(msg)
 
     self.macToPort[packet.src] = event.port # 1
-
-    if not self.transparent: # 2
-      if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
-        drop() # 2a
-        return
+  
+    if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
+      drop() # 2a
+      return
 
     if packet.dst.is_multicast:
       flood() # 3a

@@ -98,6 +98,13 @@ class Controller(object):
             EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'),
             EthAddr('00:00:00:00:00:07')
         ]
+    
+    def _handle_PortStatus (self, event):
+        if not event.added:
+            for key in self.macToPort:
+                if self.macToPort[key] == event.port:
+                    del self.macToPort[key]
+                    return
         
     def _handle_PacketIn (self, event):
         """
