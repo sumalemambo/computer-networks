@@ -2,6 +2,7 @@ Integrantes:
 Ignacio Quintana 201973610-8
 Héctor Arteaga 201973564-0
 
+link overleaf: https://www.overleaf.com/6295618412wcfwfckxdffn  
 
 Instrucciones de ejecución:
 
