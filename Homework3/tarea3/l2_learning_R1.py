@@ -93,11 +93,7 @@ class LearningSwitch (object):
   
   def _handle_PortStatus (self, event):
     if not event.added:
-      for key in self.macToPort:
-        if self.macToPort[key] == event.port:
-          del self.macToPort[key]
-          return
-
+      self.macToPort = {}
 
   def _handle_PacketIn (self, event):
     """
