@@ -102,6 +102,13 @@ class Controller(object):
     def _handle_PortStatus (self, event):
         if not event.added:
             self.macToPort = {}
+            # create ofp_flow_mod message to delete all flows
+            # (note that flow_mods match all flows by default)
+            msg = of.ofp_flow_mod(command=of.OFPFC_DELETE)
+
+            # iterate over all connected switches and delete all their flows
+            for connection in core.openflow.connections: # _connections.values() before betta
+                connection.send(msg)
         
     def _handle_PacketIn (self, event):
         """
