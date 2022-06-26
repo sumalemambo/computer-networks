@@ -12,7 +12,7 @@ RED 1:
         topology_R1.py
 
     controlador:
-        python3 pox.py log.level --DEBUG misc.full_payload tarea3.l2_learning openflow.discovery openflow.spanning_tree --no-flood --hold-down
+        python3 pox.py log.level --DEBUG misc.full_payload tarea3.l2_learning_R1 openflow.discovery openflow.spanning_tree --no-flood --hold-down
 
     mininet:
         mn --custom topology_R1.py --topo MyTopo --mac --controller remote --switch ovsk
