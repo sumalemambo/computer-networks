@@ -27,8 +27,7 @@ class Controller(object):
         self.white_list = [
             EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:03'),
             EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:05'), EthAddr('00:00:00:00:00:06'),
-            EthAddr('00:00:00:00:00:07'), EthAddr('00:00:00:00:00:08'), EthAddr('00:00:00:00:00:09'),
-            EthAddr('00:00:00:00:00:10')
+            EthAddr('00:00:00:00:00:07'), EthAddr('00:00:00:00:00:08')
         ]
 
         if connection.dpid == 1:
@@ -106,17 +105,6 @@ class Controller(object):
             EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'),
             EthAddr('00:00:00:00:00:07')
         ]
-    
-    def _handle_PortStatus (self, event):
-        if not event.added:
-            self.macToPort = {}
-            # create ofp_flow_mod message to delete all flows
-            # (note that flow_mods match all flows by default)
-            msg = of.ofp_flow_mod(command=of.OFPFC_DELETE)
-
-            # iterate over all connected switches and delete all their flows
-            for connection in core.openflow.connections: # _connections.values() before betta
-                connection.send(msg)
         
     def _handle_PacketIn (self, event):
         """
@@ -180,11 +168,6 @@ class Controller(object):
                 msg.in_port = event.port
                 self.connection.send(msg)
 
-        
-        # Drop external packets
-        if packet.src not in self.white_list or packet.dst not in self.white_list:
-            drop()
-            return
 
         # If the port is in the list of allowed ports then we know
         # that if another packet arrives with destination packet.src
@@ -212,6 +195,9 @@ class Controller(object):
         if packet.dst.is_multicast:
             flood() # 3a
         else:
+            if (packet.src not in self.white_list) or (packet.dst not in self.white_list):
+                drop()
+                return
             if packet.dst not in self.macToPort: # 4
                 flood("Port for %s unknown -- flooding" % (packet.dst,)) # 4a
             else:

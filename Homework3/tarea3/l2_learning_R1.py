@@ -157,14 +157,12 @@ class LearningSwitch (object):
       drop() # 2a
       return
 
-    # Drop external packets
-    if packet.src not in self.white_list or packet.dst not in self.white_list:
-      drop()
-      return
-
     if packet.dst.is_multicast:
       flood() # 3a
     else:
+      if (packet.src not in self.white_list) or (packet.dst not in self.white_list):
+        drop()
+        return
       if packet.dst not in self.macToPort: # 4
         flood("Port for %s unknown -- flooding" % (packet.dst,)) # 4a
       else:
