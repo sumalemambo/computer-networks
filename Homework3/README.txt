@@ -1,9 +1,7 @@
 Integrantes:
 Ignacio Quintana 201973610-8
 Héctor Arteaga 201973564-0
-
-link overleaf: https://www.overleaf.com/6295618412wcfwfckxdffn  
-
+ 
 Instrucciones de ejecución:
 
 RED 1:
@@ -20,6 +18,7 @@ RED 1:
 RED 2:
     archivos:
         controller.py
+	    firewall.py
         topology_R2.py
 
     controlador:
@@ -28,3 +27,6 @@ RED 2:
     mininet:
         mn --custom topology_R2.py --topo MyTopo --mac --controller remote --switch ovsk
 
+    En mininet ejecutar al inicio:
+	    h7 python3 -m http.server 80 &
+	    h8 python3 -m http.server 80 &
