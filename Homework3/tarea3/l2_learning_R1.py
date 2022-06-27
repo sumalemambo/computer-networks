@@ -24,6 +24,7 @@ from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from pox.lib.util import dpid_to_str, str_to_dpid
 from pox.lib.util import str_to_bool
+from pox.lib.addresses import EthAddr
 import time
 
 log = core.getLogger()
@@ -81,6 +82,14 @@ class LearningSwitch (object):
     # Our table
     self.macToPort = {}
 
+    # Address whitelist
+    self.white_list = [
+      EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:03'),
+      EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:05'), EthAddr('00:00:00:00:00:06'),
+      EthAddr('00:00:00:00:00:07'), EthAddr('00:00:00:00:00:08'), EthAddr('00:00:00:00:00:09'),
+      EthAddr('00:00:00:00:00:10')
+      ]
+
     # We want to hear PacketIn messages, so we listen
     # to the connection
     connection.addListeners(self)
@@ -90,17 +99,6 @@ class LearningSwitch (object):
 
     #log.debug("Initializing LearningSwitch, transparent=%s",
     #          str(self.transparent))
-  
-  def _handle_PortStatus (self, event):
-    if not event.added:
-      self.macToPort = {}
-      # create ofp_flow_mod message to delete all flows
-      # (note that flow_mods match all flows by default)
-      msg = of.ofp_flow_mod(command=of.OFPFC_DELETE)
-
-      # iterate over all connected switches and delete all their flows
-      for connection in core.openflow.connections: # _connections.values() before betta
-        connection.send(msg)
 
   def _handle_PacketIn (self, event):
     """
@@ -157,6 +155,11 @@ class LearningSwitch (object):
   
     if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
       drop() # 2a
+      return
+
+    # Drop external packets
+    if packet.src not in self.white_list or packet.dst not in self.white_list:
+      drop()
       return
 
     if packet.dst.is_multicast:

@@ -23,6 +23,14 @@ class Controller(object):
         # Switch blacklist
         self.black_list = {}
 
+        # Address whitelist
+        self.white_list = [
+            EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:03'),
+            EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:05'), EthAddr('00:00:00:00:00:06'),
+            EthAddr('00:00:00:00:00:07'), EthAddr('00:00:00:00:00:08'), EthAddr('00:00:00:00:00:09'),
+            EthAddr('00:00:00:00:00:10')
+        ]
+
         if connection.dpid == 1:
             self.s1_setup()
         elif connection.dpid == 2:
@@ -171,6 +179,12 @@ class Controller(object):
                 msg.buffer_id = event.ofp.buffer_id
                 msg.in_port = event.port
                 self.connection.send(msg)
+
+        
+        # Drop external packets
+        if packet.src not in self.white_list or packet.dst not in self.white_list:
+            drop()
+            return
 
         # If the port is in the list of allowed ports then we know
         # that if another packet arrives with destination packet.src
